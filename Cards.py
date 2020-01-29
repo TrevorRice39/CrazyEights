@@ -37,7 +37,7 @@ class Deck:
         for rank in self.rank_names:
             for suit in self.suits:
                 yield Card(rank, suit) # yields all the combinations of cards
-    def getTop(self):
+    def peekTop(self):
         return self.deck_dict[self.deck[-1]]
 
     def removeTop(self):
@@ -63,3 +63,41 @@ class Hand:
     def removeCard(self, position):
         self.cards.pop(position)
         self.size -= 1
+
+class Game:
+
+    def __init__(self):
+        # make the deck for the game
+        self.deck = Deck()
+
+        # create the players
+        self.player1 = Hand(1)
+        self.player2 = Hand(2)
+
+        
+
+    def startGame(self):
+        self.dealInitialHands()
+
+        self.turn = randint(1, 3) # randomly choose player 1 or 2 to go first
+
+    def dealInitialHands(self):
+
+        # deal each card one at a time to each player
+        # each player gets a total of 5 cards
+        self.player1.addCard(self.deck.removeTop())
+        self.player2.addCard(self.deck.removeTop())
+        self.player1.addCard(self.deck.removeTop())
+        self.player2.addCard(self.deck.removeTop())
+        self.player1.addCard(self.deck.removeTop())
+        self.player2.addCard(self.deck.removeTop())
+        self.player1.addCard(self.deck.removeTop())
+        self.player2.addCard(self.deck.removeTop())
+        self.player1.addCard(self.deck.removeTop())
+        self.player2.addCard(self.deck.removeTop())
+
+        if self.deck.peekTop().rank == "Eight":
+            self = Game()
+
+    def makeMove(self, playerNumber, card):
+        pass
