@@ -23,8 +23,6 @@ class Deck:
                   "Four", "Five", "Six", "Seven",
                   "Eight", "Nine", "Ten", "Jack",
                   "Queen", "King"]
-
-    
             
     def __init__(self):
         # dictionary of all cards {card id -> card)
@@ -47,5 +45,21 @@ class Deck:
 
 class Hand:
 
-    def __init__
-deck = Deck()
+    def __init__(self, player_number):
+        self.cards = []
+        self.size = 0
+        self.player_number = player_number
+
+    def __str__(self):
+        hand_str = "Player {0}'s hand: ".format(self.player_number)
+        for card in self.cards:
+            hand_str += str(card) + ", "
+
+        return hand_str[0 : -2]
+    def addCard(self, card):
+        self.cards.append(card)
+        self.size += 1
+    
+    def removeCard(self, position):
+        self.cards.pop(position)
+        self.size -= 1
