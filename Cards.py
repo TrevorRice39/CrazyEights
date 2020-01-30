@@ -78,6 +78,9 @@ class Hand:
         self.cards.pop(position)
         self.size -= 1
 
+    def getCard(self, index):
+        return self.cards[index]
+
 class Game:
 
     def __init__(self):
@@ -124,21 +127,69 @@ class Game:
     # card is their move
     # newSuit must be specified if they play an eight
     def makeMove(self, playerNumber, cardIndex, newSuit):
-        card = self.deck[cardIndex]
-        if card.suit == self.currentSuit:
-            self.discard.addCard(card)
-        elif card.rank == self.discard.peekTop().rank:
-            self.discard.addCard(card)
-        elif card.rank == "Eight":
-            self.discard.addCard(card)
-            self.currentSuit = newSuit
-    
-    
+        if playerNumber == 1:
+            if move == "d":
+                newCard = self.deck.removeTop()
+                while newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank:
+                    self.player1.addCard(newCard)
+                    newCard = self.deck.removeTop()
+                self.player1.addCard(newCard)
+                self.turn = 1
+                return True
+            self.turn = 2
+            card = self.player1.getCard(cardIndex)
+            print(card)
+            if card.suit == self.currentSuit:
+                self.player1.removeCard(cardIndex)
+                self.discard.addCard(card)
+                return True
+            elif card.rank == self.discard.peekTop().rank:
+                self.player1.removeCard(cardIndex)
+                self.discard.addCard(card)
+                self.currentSuit = card.suit
+                return True
+            elif card.rank == "Eight":
+                self.player1.removeCard(cardIndex)
+                self.discard.addCard(card)
+                self.currentSuit = newSuit
+                return True
+            else:
+                self.turn = 1
+                return False
+        else:
+            if move == "d":
+                newCard = self.deck.removeTop()
+                while newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank:
+                    self.player2.addCard(newCard)
+                    newCard = self.deck.removeTop()
+                self.player2.addCard(newCard)    
+                self.turn = 2
+                return True
+            self.turn = 1
+            card = self.player2.getCard(cardIndex)
+            print(card)
+            if card.suit == self.currentSuit:
+                self.player2.removeCard(cardIndex)
+                self.discard.addCard(card)
+                return True
+            elif card.rank == self.discard.peekTop().rank:
+                self.player2.removeCard(cardIndex)
+                self.discard.addCard(card)
+                self.currentSuit = card.suit
+                return True
+            elif card.rank == "Eight":
+                self.player2.removeCard(cardIndex)
+                self.discard.addCard(card)
+                self.currentSuit = newSuit
+                return True
+            else:
+                self.turn = 2
+                return False
+            
 
 game = Game()
 
 game.startGame()
-
 while True:
     print("Top of discard: {0}:".format(game.discard.peekTop()))
     if game.turn == 1:
@@ -147,4 +198,14 @@ while True:
         print(game.player2)
     print("Player {0}, make your move: ".format(game.turn), end = '')
     move = input()
+    if move.isdigit():
+        move = int(move)
+    else:
+        if move != "d":
+            while not (move.isdigit()) and move != "d":
+                print("Invalid move")
+                print("Player {0}, make your move: ".format(game.turn), end = '')
+                move = input()
+            if move.isdigit():
+                move = int(move)
     game.makeMove(game.turn, move, "")
