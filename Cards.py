@@ -20,7 +20,7 @@ class Deck:
     suits = ["Hearts", "Diamonds", "Spades", "Clubs"]
 
     # ranks of our cards
-    rank_names = ["Ace", "One", "Two", "Three",
+    rank_names = ["Ace", "Two", "Three",
                   "Four", "Five", "Six", "Seven",
                   "Eight", "Nine", "Ten", "Jack",
                   "Queen", "King"]
@@ -50,7 +50,10 @@ class Deck:
         return self.deck_dict[self.deck[-1]]
 
     def removeTop(self):
+        print(self.size)
+        self.size -= 1
         return self.deck_dict[self.deck.pop()]
+        
 
     def addCard(self, card):
         self.deck_dict[card.id]  = card
@@ -94,8 +97,6 @@ class Game:
         self.player1 = Hand(1)
         self.player2 = Hand(2)
 
-        
-
     def startGame(self):
         self.dealInitialHands() # deal the initial hands to the 2 players
 
@@ -127,85 +128,83 @@ class Game:
     # card is their move
     # newSuit must be specified if they play an eight
     def makeMove(self, playerNumber, cardIndex, newSuit):
+        ret = "1i"
         if playerNumber == 1:
-            if move == "d":
-                newCard = self.deck.removeTop()
-                while newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank:
-                    self.player1.addCard(newCard)
+            if cardIndex == "d":
+                newCard = None
+                if self.deck.size > 0:
                     newCard = self.deck.removeTop()
-                self.player1.addCard(newCard)
+                    while newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank and self.deck.size > 0:
+                        self.player1.addCard(newCard)
+                        newCard = self.deck.removeTop()
+                    if newCard is not None:
+                        self.player1.addCard(newCard)
                 self.turn = 1
-                return True
-            self.turn = 2
-            card = self.player1.getCard(cardIndex)
-            print(card)
-            if card.suit == self.currentSuit:
-                self.player1.removeCard(cardIndex)
-                self.discard.addCard(card)
-                return True
-            elif card.rank == self.discard.peekTop().rank:
-                self.player1.removeCard(cardIndex)
-                self.discard.addCard(card)
-                self.currentSuit = card.suit
-                return True
-            elif card.rank == "Eight":
-                self.player1.removeCard(cardIndex)
-                self.discard.addCard(card)
-                self.currentSuit = newSuit
-                return True
+                ret = "1v"
             else:
-                self.turn = 1
-                return False
+                self.turn = 2
+                card = self.player1.getCard(cardIndex)
+                print(card)
+                if card.suit == self.currentSuit:
+                    self.player1.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    ret = "1v"
+                elif card.rank == self.discard.peekTop().rank:
+                    self.player1.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    self.currentSuit = card.suit
+                    ret = "1v"
+                elif card.rank == "Eight":
+                    self.player1.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    self.currentSuit = newSuit
+                    ret = "1v"
+                else:
+                    self.turn = 1
+                    ret = "1i"
         else:
-            if move == "d":
-                newCard = self.deck.removeTop()
-                while newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank:
-                    self.player2.addCard(newCard)
+            if cardIndex == "d":
+                newCard = None
+                if self.deck.size > 0:
                     newCard = self.deck.removeTop()
-                self.player2.addCard(newCard)    
+                    while newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank and self.deck.size > 0:
+                        self.player2.addCard(newCard)
+                        newCard = self.deck.removeTop()
+                    self.player2.addCard(newCard)    
                 self.turn = 2
-                return True
-            self.turn = 1
-            card = self.player2.getCard(cardIndex)
-            print(card)
-            if card.suit == self.currentSuit:
-                self.player2.removeCard(cardIndex)
-                self.discard.addCard(card)
-                return True
-            elif card.rank == self.discard.peekTop().rank:
-                self.player2.removeCard(cardIndex)
-                self.discard.addCard(card)
-                self.currentSuit = card.suit
-                return True
-            elif card.rank == "Eight":
-                self.player2.removeCard(cardIndex)
-                self.discard.addCard(card)
-                self.currentSuit = newSuit
-                return True
+                ret = "2v"
             else:
-                self.turn = 2
-                return False
-            
+                self.turn = 1
+                card = self.player2.getCard(cardIndex)
+                print(card)
+                if card.suit == self.currentSuit:
+                    self.player2.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    ret = "2v"
+                elif card.rank == self.discard.peekTop().rank:
+                    self.player2.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    self.currentSuit = card.suit
+                    ret = "2v"
+                elif card.rank == "Eight":
+                    self.player2.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    self.currentSuit = newSuit
+                    ret = "2v"
+                else:
+                    self.turn = 2
+                    ret = "2i"
+        if self.deck.size == 0:
+            self.deck.deck = self.discard.deck[0 : -1]
+            self.discard.cards = self.discard.deck[-1]
+        if ret == "1i":
+            return (False, "Player 1 invalid move")
+        elif ret == "2i":
+            return (False, "Player 2 invalid move")
+        elif ret == "1v" and self.player1.size == 0:
+            return (True, "Player 1  wins!")
+        elif ret == "2v" and self.player2.size == 0:
+            return (True, "Player 2 wins!")
 
-game = Game()
-
-game.startGame()
-while True:
-    print("Top of discard: {0}:".format(game.discard.peekTop()))
-    if game.turn == 1:
-        print(game.player1)
-    else:
-        print(game.player2)
-    print("Player {0}, make your move: ".format(game.turn), end = '')
-    move = input()
-    if move.isdigit():
-        move = int(move)
-    else:
-        if move != "d":
-            while not (move.isdigit()) and move != "d":
-                print("Invalid move")
-                print("Player {0}, make your move: ".format(game.turn), end = '')
-                move = input()
-            if move.isdigit():
-                move = int(move)
-    game.makeMove(game.turn, move, "")
+        def calculateScore():
+            pass
