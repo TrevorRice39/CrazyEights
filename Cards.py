@@ -50,7 +50,6 @@ class Deck:
         return self.deck_dict[self.deck[-1]]
 
     def removeTop(self):
-        print(self.size)
         self.size -= 1
         return self.deck_dict[self.deck.pop()]
         
@@ -121,6 +120,10 @@ class Game:
         self.player1.addCard(self.deck.removeTop())
         self.player2.addCard(self.deck.removeTop())
 
+        ### DELETE THIS #############
+        self.player1.cards[0].rank = "Eight"
+        self.player2.cards[0].rank = "Eight"
+
         if self.deck.peekTop().rank == "Eight": # restart the game if an eight is at the top
             self = Game()
 
@@ -134,7 +137,7 @@ class Game:
                 newCard = None
                 if self.deck.size > 0:
                     newCard = self.deck.removeTop()
-                    while newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank and self.deck.size > 0:
+                    while  newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank and self.deck.size > 0:
                         self.player1.addCard(newCard)
                         newCard = self.deck.removeTop()
                     if newCard is not None:
@@ -145,7 +148,12 @@ class Game:
                 self.turn = 2
                 card = self.player1.getCard(cardIndex)
                 print(card)
-                if card.suit == self.currentSuit:
+                if card.rank == "Eight":
+                    self.player1.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    self.currentSuit = newSuit
+                    ret = "1v"
+                elif card.suit == self.currentSuit:
                     self.player1.removeCard(cardIndex)
                     self.discard.addCard(card)
                     ret = "1v"
@@ -153,11 +161,6 @@ class Game:
                     self.player1.removeCard(cardIndex)
                     self.discard.addCard(card)
                     self.currentSuit = card.suit
-                    ret = "1v"
-                elif card.rank == "Eight":
-                    self.player1.removeCard(cardIndex)
-                    self.discard.addCard(card)
-                    self.currentSuit = newSuit
                     ret = "1v"
                 else:
                     self.turn = 1
@@ -177,7 +180,12 @@ class Game:
                 self.turn = 1
                 card = self.player2.getCard(cardIndex)
                 print(card)
-                if card.suit == self.currentSuit:
+                if card.rank == "Eight":
+                    self.player2.removeCard(cardIndex)
+                    self.discard.addCard(card)
+                    self.currentSuit = newSuit
+                    ret = "2v"
+                elif card.suit == self.currentSuit:
                     self.player2.removeCard(cardIndex)
                     self.discard.addCard(card)
                     ret = "2v"
@@ -186,11 +194,7 @@ class Game:
                     self.discard.addCard(card)
                     self.currentSuit = card.suit
                     ret = "2v"
-                elif card.rank == "Eight":
-                    self.player2.removeCard(cardIndex)
-                    self.discard.addCard(card)
-                    self.currentSuit = newSuit
-                    ret = "2v"
+
                 else:
                     self.turn = 2
                     ret = "2i"
@@ -205,6 +209,8 @@ class Game:
             return (True, "Player 1  wins!")
         elif ret == "2v" and self.player2.size == 0:
             return (True, "Player 2 wins!")
+        else:
+            return (True, "Valid")
 
         def calculateScore():
             pass
