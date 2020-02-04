@@ -49,22 +49,40 @@ def send_data(request_type, message, socket, newline):
 def send_card_info(player, game, player_socket):
     send_data("message", str(player) + "\n\n" + "Top of discard: " + str(game.discard.peekTop()) + "\nCurrent Suit: " + str(game.currentSuit), player_socket, True)
 
+def recv_data(playerSocket, size, listOfMessages):
+    try:
+        for message in listOfMessages:
+            send_data(message[0], message[1], playerSocket, message[2])
+        data = playerSocket.recv(size).decode()
+        if data != size:
+            recv_data(playerSocket, size, listOfMessages)
+        return data
+    except:
+        print("error occured")
+
 
 def play_turn(player, playerSocket):
-    send_data("requestSel", "Select the card (by index) or d to draw or q to quit.", playerSocket, False)
-    send_data("message", str(player.size), playerSocket, False)
-    selection = playerSocket.recv(2).decode()
+    # send_data("requestSel", "Select the card (by index) or d to draw or q to quit.", playerSocket, False)
+    # send_data("message", str(player.size), playerSocket, False)
+
+    listOfMessages = [["requestSel", "Select the card (by index) or d to draw or q to quit.", False], ["message", str(player.size), False]]
+    # selection = playerSocket.recv(2).decode()
+    selection = recv_data(playerSocket, 2, listOfMessages)
     selection = selection.replace(' ', '')
     if selection == "d":
         return ("d", "")
     elif selection == "q":
         return ("q", "")
-    elif player.cards[int(selection)].rank == "Eight":
-        send_data("requestSuit", "Select a new suit. 0. Hearts, 1. Clubs, 2. Diamonds, 3. Spades", playerSocket, False)
-        suit = int(playerSocket.recv(1).decode())
-        newSuit = ["Hearts", "Clubs", "Diamonds", "Spades"][suit]
-        #send_data("message", "Waiting for opponent to play a card...", playerSocket, True)
-        return (int(selection), newSuit)
+    try:
+        if player.cards[int(selection)].rank == "Eight":
+            send_data("requestSuit", "Select a new suit. 0. Hearts, 1. Clubs, 2. Diamonds, 3. Spades", playerSocket, False)
+            suit = int(playerSocket.recv(1).decode())
+            newSuit = ["Hearts", "Clubs", "Diamonds", "Spades"][suit]
+            #send_data("message", "Waiting for opponent to play a card...", playerSocket, True)
+            return (int(selection), newSuit)
+    except:
+        print("error occured")
+    return ("q", "")
     # send_data("message", "Waiting for opponent to play a card...", playerSocket, True)
 
     return (int(selection), "")
@@ -118,10 +136,16 @@ def play_game(player_sockets):
             send_card_info(game.player1, game, player1)
             selection, suit = play_turn(game.player1, player1)
             if selection == 'q':
-                send_data("dc", "You will be disconnected.", player1, True)
-                player1.close()
-                send_data("dc", "Opponent has left.\nYou win!\nYou will be disconnected.", player2, True)
-                player2.close()
+                try:
+                    send_data("dc", "You will be disconnected.", player1, True)
+                    player1.close()
+                except:
+                    print("error")
+                try:
+                    send_data("dc", "Opponent has left.\nYou win!\nYou will be disconnected.", player2, True)
+                    player2.close()
+                except:
+                    print("error")
                 return None
             result = game.makeMove(game.turn, selection, suit)[1]
             if result == "p1i":
@@ -136,10 +160,16 @@ def play_game(player_sockets):
             send_card_info(game.player2, game, player2)
             selection, suit = play_turn(game.player2, player2)
             if selection == 'q':
-                send_data("dc", "You will be disconnected", player2, True)
-                player2.close()
-                send_data("dc", "Opponent has left.\nYou win!\nYou will be disconnected.", player1, True)
-                player1.close()
+                try:
+                    send_data("dc", "You will be disconnected", player2, True)
+                    player2.close()
+                except:
+                    print("error")
+                try:
+                    send_data("dc", "Opponent has left.\nYou win!\nYou will be disconnected.", player1, True)
+                    player1.close()
+                except:
+                    print("error")
                 return None
             result = game.makeMove(game.turn, selection, suit)[1]
             if result == "p2i":
