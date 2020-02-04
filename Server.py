@@ -118,13 +118,12 @@ def play_game(player_sockets):
             send_card_info(game.player1, game, player1)
             selection, suit = play_turn(game.player1, player1)
             if selection == 'q':
-                send_data("message", "You will be disconnected.", player1, True)
+                send_data("dc", "You will be disconnected.", player1, True)
                 player1.close()
-                send_data("message", "Opponent has left.\nYou win!\nYou will be disconnected.", player2, True)
+                send_data("dc", "Opponent has left.\nYou win!\nYou will be disconnected.", player2, True)
                 player2.close()
                 return None
             result = game.makeMove(game.turn, selection, suit)[1]
-            result = "p1w"
             if result == "p1i":
                 send_data("message", "Invalid move. Try again.", player1, True)
             elif result == "p1w":
@@ -137,9 +136,9 @@ def play_game(player_sockets):
             send_card_info(game.player2, game, player2)
             selection, suit = play_turn(game.player2, player2)
             if selection == 'q':
-                send_data("message", "You will be disconnected", player2, True)
+                send_data("dc", "You will be disconnected", player2, True)
                 player2.close()
-                send_data("message", "Opponent has left.\nYou win!\nYou will be disconnected.", player1, True)
+                send_data("dc", "Opponent has left.\nYou win!\nYou will be disconnected.", player1, True)
                 player1.close()
                 return None
             result = game.makeMove(game.turn, selection, suit)[1]

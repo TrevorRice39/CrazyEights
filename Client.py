@@ -70,6 +70,7 @@ def process_requests():
             selection = input()
         sock.sendall(selection.encode())
     elif requestType == "dc":
+        print(message)
         sys.exit(0)
 
 

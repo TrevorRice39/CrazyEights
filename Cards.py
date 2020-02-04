@@ -209,11 +209,31 @@ class Game:
         elif ret == "2i":
             return (False, "p2i")
         elif ret == "1v" and self.player1.size == 0:
+            self.calculateScore("p1")
             return (True, "p1w")
         elif ret == "2v" and self.player2.size == 0:
+            self.calculateScore("p2")
             return (True, "p2w")
         else:
             return (True, "pv")
 
-        def calculateScore():
-            pass
+    def calculateScore(self, winner):
+        rank_names = ["Ace", "Two", "Three",
+                      "Four", "Five", "Six", "Seven",
+                      "Eight", "Nine", "Ten", "Jack",
+                      "Queen", "King"]
+        score_dict = dict()
+        for i in range(0, 10):
+            score_dict[rank_names[i]] = i + 1
+        score_dict["Eight"] = 50
+        score_dict["Jack"] = 10
+        score_dict["Queen"] = 10
+        score_dict["King"] = 10
+
+        if winner == "p1":
+            for card in self.player2.cards:
+                self.player1Score += score_dict[card.rank]
+        else:
+            for card in self.player1.cards:
+                self.player2Score += score_dict[card.rank]
+
