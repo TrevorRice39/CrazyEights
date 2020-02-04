@@ -12,3 +12,6 @@ lib64
 *.pyc
 
 *.idea/
+
+Client.spec
+build/

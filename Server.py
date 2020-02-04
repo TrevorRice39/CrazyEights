@@ -1,26 +1,5 @@
-
-# while True:
-#     print("Top of discard: {0}:".format(game.discard.peekTop()))
-#     if game.turn == 1:
-#         print(game.player1)
-#     else:
-#         print(game.player2)
-#     print("Player {0}, make your move: ".format(game.turn), end = '')
-#     move = input()
-#     if move.isdigit():
-#         move = int(move)
-#     else:
-#         if move != "d":
-#             while not (move.isdigit()) and move != "d":
-#                 print("Invalid move")
-#                 print("Player {0}, make your move: ".format(game.turn), end = '')
-#                 move = input()
-#             if move.isdigit():
-#                 move = int(move)
-#     game.makeMove(game.turn, move, "")
-
+import Cards
 import socket  # socket programming
-import threading
 from threading import Thread
 
 # create a socket object
@@ -34,14 +13,15 @@ host = socket.gethostname()
 port = 9999
 
 # bind to the port
-serversocket.bind((host, port))
+serversocket.bind(("157.89.73.36", port))
 
 # queue up to 5 requests
 serversocket.listen(20)
 
-players = [] # max 2
+players = []  # max 2
 header_max_length = 15
 message_max_size = 10
+
 
 # creates a meta data header to request/send info from/to server
 def create_header(request_type, message):
@@ -66,8 +46,6 @@ def send_data(request_type, message, socket, newline):
     socket.sendall(message.encode())
 
 
-import Cards
-
 def send_card_info(player, game, player_socket):
     send_data("message", str(player) + "\n\n" + "Top of discard: " + str(game.discard.peekTop()) + "\nCurrent Suit: " + str(game.currentSuit), player_socket, True)
 
@@ -90,6 +68,7 @@ def play_turn(player, playerSocket):
     send_data("message", "Waiting for opponent to play a card...", playerSocket, True)
     return (int(selection), "")
 
+
 def play_game(player_sockets):
     game = Cards.Game()
 
@@ -110,13 +89,27 @@ def play_game(player_sockets):
         if game.turn == 1:
             send_card_info(game.player1, game, player1)
             selection, suit = play_turn(game.player1, player1)
+            if selection == 'q':
+                send_data("message", "You will be disconnected.", player1, True)
+                player1.close()
+                send_data("message", "Opponent has left.\nYou win!\nYou will be disconnected.", player2, True)
+                player2.close()
+                return None
             result = game.makeMove(game.turn, selection, suit)
             print(result)
         elif game.turn == 2:
             send_card_info(game.player2, game, player2)
             selection, suit = play_turn(game.player2, player2)
+            if selection == 'q':
+                send_data("message", "You will be disconnected", player2, True)
+                player2.close()
+                send_data("message", "Opponent has left.\nYou win!\nYou will be disconnected.", player1, True)
+                player1.close()
+                return None
             result = game.makeMove(game.turn, selection, suit)
             print(result)
+
+
 while True:
     # found a connection
     clientsocket, addr = serversocket.accept()
@@ -131,3 +124,4 @@ while True:
         send_data("message", message, clientsocket, True)
         thread = Thread(target=play_game, args=(players,))
         thread.start()
+        players = []

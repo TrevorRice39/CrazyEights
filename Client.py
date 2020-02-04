@@ -18,13 +18,14 @@ def create_header(request_type, message):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect the socket to the port where the server is listening
-server_address = (socket.gethostname(), 9999)
+server_address = ("157.89.73.36", 9999)
 sock.connect(server_address)
 
 
 def receive_data():
     data = sock.recv(header_max_length + message_max_size + 1).decode()
-
+    if len(data) != 26:
+        return None, None
     requestType, size = data.split('|')
 
     # make sure there are no spaces (because of formatting)
@@ -39,6 +40,8 @@ def receive_data():
 def process_requests():
     requestType, message = receive_data()
 
+    if requestType == None:
+        return False
     if requestType == "requestSel":
         print(message)
         hand_size = int(receive_data()[1])
