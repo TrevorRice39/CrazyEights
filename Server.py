@@ -59,7 +59,7 @@ def recv_data(playerSocket, size, listOfMessages):
         return data
     except:
         print("error occured")
-
+        return "q"
 
 def play_turn(player, playerSocket):
     # send_data("requestSel", "Select the card (by index) or d to draw or q to quit.", playerSocket, False)
