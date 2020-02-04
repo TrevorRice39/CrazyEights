@@ -1,4 +1,5 @@
 import socket
+import sys
 
 header_max_length = 15
 message_max_size = 10
@@ -60,6 +61,16 @@ def process_requests():
         sock.sendall(selection.encode())
     elif requestType == "message":
         print(message)
+    elif requestType == "playAgain":
+        print(message)
+        selection = input()
+
+        while selection != 'y' and selection != 'n':
+            print(message)
+            selection = input()
+        sock.sendall(selection.encode())
+    elif requestType == "dc":
+        sys.exit(0)
 
 
 while True:

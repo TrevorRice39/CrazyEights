@@ -67,7 +67,7 @@ class Hand:
         self.player_number = player_number
 
     def __str__(self):
-        hand_str = "Player {0}'s hand: ".format(self.player_number)
+        hand_str = "Your hand: ".format(self.player_number)
         for index, card in enumerate(self.cards):
             hand_str += str(card) + "({0}), ".format(index)
 
@@ -86,11 +86,18 @@ class Hand:
 class Game:
 
     def __init__(self):
+        self.player1Score = 0
+        self.player2Score = 0
+
+        self.newGame()
+
+    def newGame(self):
+        self.deck = Deck()
         # make the deck for the game
         self.deck = Deck()
 
-        self.discard = Deck() # discard pile
-        self.discard.newEmptyDeck() # empty deck
+        self.discard = Deck()  # discard pile
+        self.discard.newEmptyDeck()  # empty deck
 
         # create the players
         self.player1 = Hand(1)
@@ -119,10 +126,6 @@ class Game:
         self.player2.addCard(self.deck.removeTop())
         self.player1.addCard(self.deck.removeTop())
         self.player2.addCard(self.deck.removeTop())
-
-        ### DELETE THIS #############
-        self.player1.cards[0].rank = "Eight"
-        self.player2.cards[0].rank = "Eight"
 
         if self.deck.peekTop().rank == "Eight": # restart the game if an eight is at the top
             self = Game()
@@ -202,15 +205,15 @@ class Game:
             self.deck.deck = self.discard.deck[0 : -1]
             self.discard.cards = self.discard.deck[-1]
         if ret == "1i":
-            return (False, "Player 1 invalid move")
+            return (False, "p1i")
         elif ret == "2i":
-            return (False, "Player 2 invalid move")
+            return (False, "p2i")
         elif ret == "1v" and self.player1.size == 0:
-            return (True, "Player 1  wins!")
+            return (True, "p1w")
         elif ret == "2v" and self.player2.size == 0:
-            return (True, "Player 2 wins!")
+            return (True, "p2w")
         else:
-            return (True, "Valid")
+            return (True, "pv")
 
         def calculateScore():
             pass
