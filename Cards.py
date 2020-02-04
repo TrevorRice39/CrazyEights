@@ -38,61 +38,85 @@ class Deck:
         self.size = len(self.deck)
 
     def newEmptyDeck(self):
+        # empty deck for discard pile
         self.deck_dict = dict()
         self.deck = list()
         self.size = 0
 
+    # create a deck of 52 cards
     def getDeck(self):
         for rank in self.rank_names:
             for suit in self.suits:
                 yield Card(rank, suit) # yields all the combinations of cards
+
+    # return top card without removing it
     def peekTop(self):
         return self.deck_dict[self.deck[-1]]
 
+    # remove and return top card
     def removeTop(self):
-        self.size -= 1
+        self.size -= 1 # lower card size by 1
         return self.deck_dict[self.deck.pop()]
-        
 
+    # add a card to the deck
     def addCard(self, card):
-        self.deck_dict[card.id]  = card
+        # add the card to the dictionary
+        self.deck_dict[card.id] = card
+        # append it to our deck
         self.deck.append(card.id)
+        # increase size by 1
         self.size += 1
 
+# class for a hand of cards for each player
 class Hand:
 
     def __init__(self, player_number):
+        # list of cards in hand
         self.cards = []
+        # size of hand
         self.size = 0
+        # setting the player number
         self.player_number = player_number
 
+    # overriding __str__ method to show player's current hand
     def __str__(self):
-        hand_str = "Your hand: ".format(self.player_number)
+        hand_str = "Your hand: "
         for index, card in enumerate(self.cards):
-            hand_str += str(card) + "({0}), ".format(index)
+            hand_str += str(card) + "({0}), ".format(index) # card seperated by , and space
+        return hand_str[0: -2] # remove the last comma and space
 
-        return hand_str[0 : -2]
+    # add card to hand
     def addCard(self, card):
+        # append the card to the cards list
         self.cards.append(card)
+        # increase size by 1
         self.size += 1
-    
+
+    # remove a card from a given position
     def removeCard(self, position):
+        # remove card
         self.cards.pop(position)
+        # decrease size
         self.size -= 1
 
+    # return but dont' remove card at index
     def getCard(self, index):
+        # return card
         return self.cards[index]
 
+# the core of the game
 class Game:
 
+    # initialize scores to 0 and start a new round
     def __init__(self):
         self.player1Score = 0
         self.player2Score = 0
 
         self.newGame()
 
+    # sets up a new round
     def newGame(self):
-        self.deck = Deck()
+
         # make the deck for the game
         self.deck = Deck()
 
@@ -103,6 +127,7 @@ class Game:
         self.player1 = Hand(1)
         self.player2 = Hand(2)
 
+    # start the game
     def startGame(self):
         self.dealInitialHands() # deal the initial hands to the 2 players
 
@@ -134,41 +159,49 @@ class Game:
     # card is their move
     # newSuit must be specified if they play an eight
     def makeMove(self, playerNumber, cardIndex, newSuit):
-        ret = "1i"
-        if playerNumber == 1:
-            if cardIndex == "d":
-                newCard = None
-                if self.deck.size > 0:
-                    newCard = self.deck.removeTop()
-                    while  newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank and self.deck.size > 0:
+        ret = "1i" # meaning player 1 invalid
+        if playerNumber == 1: # if player 1 is moving
+            if cardIndex == "d": # if they want to draw
+                newCard = None # temp card
+                if self.deck.size > 0: # make sure deck has cards
+                    newCard = self.deck.removeTop() # get the top of the deck
+                    # keep drawing until a playable card is drawn
+                    while newCard.rank != "Eight" and newCard.suit != self.currentSuit and newCard.rank != self.discard.peekTop().rank and self.deck.size > 0:
+                        self.player1.addCard(newCard) # add card to player 1's hand
+                        newCard = self.deck.removeTop() # remove it from deck
+                    if newCard is not None: # add the last card if it is there
                         self.player1.addCard(newCard)
-                        newCard = self.deck.removeTop()
-                    if newCard is not None:
-                        self.player1.addCard(newCard)
-                self.turn = 1
+                self.turn = 1 # player 1 goes again
                 ret = "1v"
             else:
-                self.turn = 2
-                card = self.player1.getCard(cardIndex)
-                print(card)
-                if card.rank == "Eight":
+                self.turn = 2 # player 2 will go again
+                card = self.player1.getCard(cardIndex) # get the card they are playing
+                if card.rank == "Eight": # is it an eight?
+                    # remove it
                     self.player1.removeCard(cardIndex)
+                    # add card to discard
                     self.discard.addCard(card)
+                    # replace suit with new suit
                     self.currentSuit = newSuit
-                    ret = "1v"
-                elif card.suit == self.currentSuit:
+                    ret = "1v" # player 1 valid move
+                elif card.suit == self.currentSuit: # does the played card match the current suit
+                    # remove card from hand
                     self.player1.removeCard(cardIndex)
+                    # add it to discard
                     self.discard.addCard(card)
-                    ret = "1v"
-                elif card.rank == self.discard.peekTop().rank:
+                    ret = "1v" # player 1 valid move
+                elif card.rank == self.discard.peekTop().rank: # does played card match current rank
+                    # remove card from hand
                     self.player1.removeCard(cardIndex)
+                    # add it to discard
                     self.discard.addCard(card)
+                    # set the suit to the card just played
                     self.currentSuit = card.suit
-                    ret = "1v"
-                else:
-                    self.turn = 1
-                    ret = "1i"
-        else:
+                    ret = "1v" # player 1 valid move
+                else: # must be an invalid move
+                    self.turn = 1 # player one goes again
+                    ret = "1i" # 1 invalid move
+        else: # same as player 1
             if cardIndex == "d":
                 newCard = None
                 if self.deck.size > 0:
@@ -182,7 +215,6 @@ class Game:
             else:
                 self.turn = 1
                 card = self.player2.getCard(cardIndex)
-                print(card)
                 if card.rank == "Eight":
                     self.player2.removeCard(cardIndex)
                     self.discard.addCard(card)
@@ -201,23 +233,31 @@ class Game:
                 else:
                     self.turn = 2
                     ret = "2i"
+
+        # if the deck is zero, put discard cards into deck
         if self.deck.size == 0:
+            # grab all but top and put it in the deck
             self.deck.deck = self.discard.deck[0 : -1]
+            # only leave the top card in discard
             self.discard.cards = self.discard.deck[-1]
+        # if player 1 made invalid move
         if ret == "1i":
             return (False, "p1i")
-        elif ret == "2i":
+        elif ret == "2i": # player 2 invalid
             return (False, "p2i")
-        elif ret == "1v" and self.player1.size == 0:
-            self.calculateScore("p1")
+        elif ret == "1v" and self.player1.size == 0: # player 1 win
+            self.calculateScore("p1") # calculate score
             return (True, "p1w")
-        elif ret == "2v" and self.player2.size == 0:
-            self.calculateScore("p2")
+        elif ret == "2v" and self.player2.size == 0: # player 2 win
+            self.calculateScore("p2") # calculate score
             return (True, "p2w")
-        else:
+        else: # valid move, no wins
             return (True, "pv")
 
+    # calculates the score based on a given winner
     def calculateScore(self, winner):
+
+        # make a Rank:Score dictionary
         rank_names = ["Ace", "Two", "Three",
                       "Four", "Five", "Six", "Seven",
                       "Eight", "Nine", "Ten", "Jack",
@@ -230,10 +270,11 @@ class Game:
         score_dict["Queen"] = 10
         score_dict["King"] = 10
 
+        # if p1 wins add points
         if winner == "p1":
-            for card in self.player2.cards:
-                self.player1Score += score_dict[card.rank]
-        else:
-            for card in self.player1.cards:
-                self.player2Score += score_dict[card.rank]
+            for card in self.player2.cards: # for all cards in p2's hand
+                self.player1Score += score_dict[card.rank] # add points to player 1 score
+        else: # if p2 wins add points
+            for card in self.player1.cards: # for card in p1's hand
+                self.player2Score += score_dict[card.rank] # add points to player 2 score
 

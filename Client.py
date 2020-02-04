@@ -19,7 +19,7 @@ def create_header(request_type, message):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect the socket to the port where the server is listening
-server_address = ("157.89.73.36", 9999)
+server_address = ("127.0.0.1", 9999)
 sock.connect(server_address)
 
 
@@ -39,40 +39,49 @@ def receive_data():
     return [requestType, message]
 
 def process_requests():
-    requestType, message = receive_data()
+    requestType, message = receive_data() # receive data from server
 
-    if requestType == None:
+    if requestType == None: # if there is no request, return false
         return False
-    if requestType == "requestSel":
-        print(message)
-        hand_size = int(receive_data()[1])
+    if requestType == "requestSel": # if they need to request a selection from the user
+        print(message) # print the request message
+        hand_size = int(receive_data()[1]) # get the hand size
 
-        selection = input()
+        selection = input() # get their selection
+        # has to be 'q', 'd', or a card in their hand which is a digit for the position
         while not (selection.isdigit() and int(selection) < hand_size) and selection != 'q' and selection != 'd' :
             print(message)
             selection = input()
+        # send it to the server
         sock.sendall(selection.ljust(2).encode())
+    # request a new suit
     elif requestType == "requestSuit":
-        print(message)
+        print(message) # print the request message
+        # get their input
         selection = input()
+        # select a suit 0-3
         while (selection.isdigit() and int(selection) >= 4) or not (selection.isdigit()):
             print(message)
             selection = input()
+        # send choice to server
         sock.sendall(selection.encode())
+    # if the server just wants to display something
     elif requestType == "message":
-        print(message)
+        print(message) # print message
+    # ask the client if they want to play again
     elif requestType == "playAgain":
-        print(message)
+        print(message) # print message
         selection = input()
-
+        # they choose yes or no
         while selection != 'y' and selection != 'n':
             print(message)
             selection = input()
+        # send it to the server
         sock.sendall(selection.encode())
+    # if they're being disconnected
     elif requestType == "dc":
         print(message)
-        sys.exit(0)
-
+        sys.exit(0) # close app
 
 while True:
     process_requests()
