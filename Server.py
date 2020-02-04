@@ -60,13 +60,14 @@ def send_card_info(player, game, player_socket):
 def recv_data(playerSocket, size, listOfMessages):
     # this try except prevents the server from crashing when client closes app
     try:
+        print("recv")
         # send all the messages
         for message in listOfMessages:
             send_data(message[0], message[1], playerSocket, message[2])
         # get the data
         data = playerSocket.recv(size).decode()
         # did we get the correct amount?
-        if data != size:
+        if len(data) != size:
             recv_data(playerSocket, size, listOfMessages)
         return data
     except: # they closed or done something wrong
@@ -75,7 +76,7 @@ def recv_data(playerSocket, size, listOfMessages):
 
 # plays a turn for a given player
 def play_turn(player, playerSocket):
-
+    print("making a turn")
     # prepare list of messages to be sent to client
     # one is a request message
     # one is a regular message to be displayed
