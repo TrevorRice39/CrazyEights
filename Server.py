@@ -13,7 +13,7 @@ host = socket.gethostname()
 port = 9999
 
 # bind to the port
-serversocket.bind(("127.0.0.1", port))
+serversocket.bind((host, port))
 
 # queue up to 5 requests
 serversocket.listen(20)
@@ -60,7 +60,6 @@ def send_card_info(player, game, player_socket):
 def recv_data(playerSocket, size, listOfMessages):
     # this try except prevents the server from crashing when client closes app
     try:
-        print("recv")
         # send all the messages
         for message in listOfMessages:
             send_data(message[0], message[1], playerSocket, message[2])
@@ -76,7 +75,6 @@ def recv_data(playerSocket, size, listOfMessages):
 
 # plays a turn for a given player
 def play_turn(player, playerSocket):
-    print("making a turn")
     # prepare list of messages to be sent to client
     # one is a request message
     # one is a regular message to be displayed
@@ -110,36 +108,53 @@ def play_turn(player, playerSocket):
 
 # restarts the game
 def restart_game(game, playerSockets):
+    # tell them the game is over
+    send_data("message", "ROUND OVER!!!!", playerSockets[0], True)
+    send_data("message", "ROUND OVER!!!!", playerSockets[1], True)
+
     # tell them their score
     send_data("message", "Your score is {0}\nYour opponent's score is {1}".format(game.player1Score, game.player2Score),
               playerSockets[0], True)
     send_data("message", "Your score is {0}\nYour opponent's score is {1}".format(game.player2Score, game.player1Score),
               playerSockets[1], True)
 
-    # ask them if they want to play again
-    send_data("playAgain", "Would you like to play again? (y or n)", playerSockets[0], False)
-    p1choice = playerSockets[0].recv(1).decode()
-    send_data("playAgain", "Would you like to play again? (y or n)", playerSockets[1], False)
-    p2choice = playerSockets[1].recv(1).decode()
+    if game.player1Score >= 100 or game.player2Score >= 100:
+        if game.player1Score >= 100:
+            send_data("message", "You win the game!!!", playerSockets[0], True)
+        else:
+            send_data("message", "You win the game!!!", playerSockets[1], True)
+        # ask them if they want to play again
+        send_data("playAgain", "Would you like to play again? (y or n)", playerSockets[0], False)
+        p1choice = playerSockets[0].recv(1).decode()
+        send_data("playAgain", "Would you like to play again? (y or n)", playerSockets[1], False)
+        p2choice = playerSockets[1].recv(1).decode()
 
-    # if both said yes, start anothe rgame
-    if p1choice == p2choice and p2choice == 'y':
+        # if both said yes, start another game
+        if p1choice == p2choice and p2choice == 'y':
+            game.newGame()
+            play_game(playerSockets)
+        else:  # if not, show final score and close clients
+            send_data("message",
+                      "FINAL SCORE!\nYour score is {0}\nYour opponent's score is {1}".format(game.player1Score,
+                                                                                             game.player2Score),
+                      playerSockets[0], True)
+            send_data("message",
+                      "FINAL SCORE!\nYour score is {0}\nYour opponent's score is {1}".format(game.player2Score,
+                                                                                             game.player1Score),
+                      playerSockets[1], True)
+
+            send_data("message", "You will be disconnected", playerSockets[0], True)
+            send_data("dc", "", playerSockets[0], False)  # disconnect message so client can properly close
+            playerSockets[0].close()
+            send_data("message", "You will be disconnected.", playerSockets[1], True)
+            send_data("dc", "", playerSockets[1], False)
+            playerSockets[1].close()
+    else: # no one has won yet
+        send_data("message", "Next game is about to start!", playerSockets[0], True)
+        send_data("message","Next game is start!", playerSockets[1], True)
         game.newGame()
+        game.resetScore()
         play_game(playerSockets)
-    else: # if not, show final score and close clients
-        send_data("message",
-                  "FINAL SCORE!\nYour score is {0}\nYour opponent's score is {1}".format(game.player1Score, game.player2Score),
-                  playerSockets[0], True)
-        send_data("message",
-                  "FINAL SCORE!\nYour score is {0}\nYour opponent's score is {1}".format(game.player2Score, game.player1Score),
-                  playerSockets[1], True)
-
-        send_data("message", "You will be disconnected", playerSockets[0], True)
-        send_data("dc", "", playerSockets[0], False) # disconnect message so client can properly close
-        playerSockets[0].close()
-        send_data("message", "You will be disconnected.", playerSockets[1], True)
-        send_data("dc", "", playerSockets[1], False)
-        playerSockets[1].close()
 
 
 # main game entry
@@ -154,11 +169,15 @@ def play_game(player_sockets):
     for idx, player in enumerate(player_sockets):
         send_data("message", "The game is now beginning!", player, True)
 
+    # did the player have to repeat a turn
+    # so we don't resend messages to users
+    repeat = False
     while True:
         # if player 1 is going
         if game.turn == 1:
             # tell other player to wait
-            send_data("message", "Wait for opponents turn...", player2, True)
+            if not repeat:
+                send_data("message", "Wait for opponents turn...", player2, True)
             # send the card info to player 1
             send_card_info(game.player1, game, player1)
             # get their selection from play_turn
@@ -185,9 +204,12 @@ def play_game(player_sockets):
                 send_data("message", "Congratulations! You win this round", player1, True)
                 restart_game(game, player_sockets)
                 return
-            send_data("message", "", player2, True)
+            repeat = game.turn == 1
+            if not repeat:
+                send_data("message", "", player2, True)
         elif game.turn == 2: # same as player 1, just reversed
-            send_data("message", "Wait for opponents turn...", player1, True)
+            if not repeat:
+                send_data("message", "Wait for opponents turn...", player1, True)
             send_card_info(game.player2, game, player2)
             selection, suit = play_turn(game.player2, player2)
             if selection == 'q':
@@ -209,8 +231,9 @@ def play_game(player_sockets):
                 send_data("message", "Congratulations! You win this round", player2, True)
                 restart_game(game, player_sockets)
                 return
-            send_data("message", "", player1, True)
-
+            repeat = game.turn == 2
+            if not repeat:
+                send_data("message", "", player1, True)
 while True:
     # found a connection
     clientsocket, addr = serversocket.accept()

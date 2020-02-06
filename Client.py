@@ -19,7 +19,7 @@ def create_header(request_type, message):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect the socket to the port where the server is listening
-server_address = ("127.0.0.1", 9999)
+server_address = (socket.gethostname(), 9999)
 sock.connect(server_address)
 
 

@@ -114,6 +114,11 @@ class Game:
 
         self.newGame()
 
+    # resets the score
+    def resetScore(self):
+        self.player1Score = 0
+        self.player2Score = 0
+
     # sets up a new round
     def newGame(self):
 
